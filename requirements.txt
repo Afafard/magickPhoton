@@ -1,0 +1,30 @@
+# Core & Imaging
+Pillow>=10.0
+opencv-python-headless==4.8.0
+pyobjc-framework-AVFoundation==9.2
+imageio-ffmpeg>=0.4.7
+PyPDF2>=3.0.0
+
+# Video Processing
+ffmpeg-python==0.2.0
+av==10.0.0
+
+# AI Operations
+torch>=2.0
+transformers[torch]>=4.30
+diffusers>=0.20.0
+accelerate>=0.23.0
+
+# Audio & Math
+librosa>=0.10.0
+scipy>=1.10.0
+numpy>=1.24.0
+
+# Integration
+flask>=2.3.0
+pyzmq>=25.0.0
+
+# Utilities
+tqdm>=4.65.0
+requests>=2.31.0
+
