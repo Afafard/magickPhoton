@@ -1,4 +1,3 @@
-
 import SwiftUI
 import AVKit
 
@@ -22,7 +21,7 @@ struct VideoTimelineView: View {
             
             HStack {
                 Text(timeString(time: endTime))
-                Slider(value: $endTime, in: startTime...duration, step: 0.1) {
+                Slider(value: $endTime, in: startTime...max(duration, startTime), step: 0.1) {
                     Text("End Time")
                 }
             }
@@ -31,6 +30,9 @@ struct VideoTimelineView: View {
                 .font(.caption)
         }
         .onAppear {
+            loadDuration()
+        }
+        .onChange(of: videoURL) { _ in
             loadDuration()
         }
     }
@@ -43,13 +45,17 @@ struct VideoTimelineView: View {
     }
     
     private func loadDuration() {
+        guard !videoURL.path.isEmpty else { return }
+        
         let asset = AVAsset(url: videoURL)
         Task {
             do {
                 let duration = try await asset.load(.duration)
                 self.duration = duration.seconds
-                if endTime > duration {
-                    endTime = duration
+                if endTime > duration.seconds {
+                    DispatchQueue.main.async {
+                        endTime = duration.seconds
+                    }
                 }
             } catch {
                 print("Error loading video duration: \(error)")
@@ -57,4 +63,3 @@ struct VideoTimelineView: View {
         }
     }
 }
-

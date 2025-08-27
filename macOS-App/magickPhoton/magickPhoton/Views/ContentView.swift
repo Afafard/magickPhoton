@@ -4,23 +4,25 @@ import Combine
 
 struct ContentView: View {
     @State private var inputURL: URL? = nil
+    @State private var player: AVPlayer? = nil
     @State private var isCropActive = false
     @State private var srModel = "eugenesiow/sr-div2k"
     @State private var startTime: Double = 0
     @State private var endTime: Double = 10
     @State private var cropRect = CGRect(x: 0.25, y: 0.25, width: 0.5, height: 0.5)
     @State private var isProcessing = false
-    
+    @State private var processingResult: String? = nil
+
     // Add an observer for the notification
     @State private var serviceFileCancellable: AnyCancellable?
-    
+
     var body: some View {
         HStack(spacing: 0) {
             // Left Panel - File Browser and Controls
             VStack(spacing: 0) {
                 FileBrowserView(selectedFile: $inputURL)
                     .frame(height: 200)
-                
+
                 ControlPanelView(
                     isCropActive: $isCropActive,
                     srModel: $srModel,
@@ -31,25 +33,25 @@ struct ContentView: View {
             }
             .frame(width: 300)
             .background(Color(NSColor.windowBackgroundColor))
-            
+
             // Main Content Area - Preview and Timeline
             VStack(spacing: 0) {
                 HStack {
                     PreviewPanel(
-                        player: inputURL != nil ? AVPlayer(url: inputURL!) : nil,
+                        player: player,
                         isOriginal: true,
                         cropRect: $cropRect,
                         isActive: $isCropActive
                     )
-                    
+
                     PreviewPanel(
-                        player: inputURL != nil ? AVPlayer(url: inputURL!) : nil,
+                        player: player,
                         isOriginal: false,
                         cropRect: $cropRect,
                         isActive: .constant(false)
                     )
                 }
-                
+
                 VideoTimelineView(
                     videoURL: inputURL ?? URL(fileURLWithPath: ""),
                     startTime: $startTime,
@@ -61,16 +63,73 @@ struct ContentView: View {
         .onAppear {
             setupServiceObserver()
         }
+        .onChange(of: inputURL) { newValue in
+            if let url = newValue {
+                player = AVPlayer(url: url)
+            } else {
+                player = nil
+            }
+        }
     }
-    
+
     private func setupServiceObserver() {
         serviceFileCancellable = NotificationCenter.default.publisher(for: .serviceFileNotification)
             .receive(on: DispatchQueue.main)
-            .sink { notification in
-                if let filePath = notification.object as? String {
-                    self.inputURL = URL(fileURLWithPath: filePath)
+            .sink(
+                receiveCompletion: { completion in
+                    if case .failure(let error) = completion {
+                        print("Error in service file observer: \(error)")
+                    }
+                },
+                receiveValue: { notification in
+                    if let filePath = notification.object as? String {
+                        do {
+                            let url = URL(fileURLWithPath: filePath)
+                            self.inputURL = url
+                        } catch {
+                            print("Error creating URL from file path: \(error)")
+                        }
+                    }
                 }
+            )
+    }
+
+    private func processMedia() {
+        guard let inputURL = inputURL else { return }
+
+        isProcessing = true
+
+        // Create output path
+        let outputPath = FileManager.default.temporaryDirectory.appendingPathComponent("output.mp4")
+
+        // Prepare operations dictionary
+        var operations: [String: Any] = [:]
+
+        if isCropActive {
+            operations["crop"] = [Int(cropRect.minX * 100), Int(cropRect.minY * 100),
+                                 Int(cropRect.width * 100), Int(cropRect.height * 100)]
+        }
+
+        if !srModel.isEmpty {
+            operations["sr_model"] = srModel
+        }
+
+        // Use Python bridge to process media
+        let result = PythonBridge.shared.processMedia(
+            inputPath: inputURL.path,
+            outputPath: outputPath.path,
+            operations: operations
+        )
+
+        DispatchQueue.main.async {
+            isProcessing = false
+            processingResult = result ? "Processing completed successfully" : "Processing failed"
+
+            if result {
+                // Update the preview with output file
+                self.player = AVPlayer(url: outputPath)
             }
+        }
     }
 }
 
