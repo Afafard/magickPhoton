@@ -1,0 +1,37 @@
+name: magickPhoton
+options:
+  bundleIdPrefix: com.example
+packages: {}
+targets:
+  magickPhoton:
+    type: application
+    platform: macOS
+    deploymentTarget: 12.0
+    sources:
+      - path: magickPhoton
+    info:
+      path: Info.plist
+      properties:
+        CFBundleDisplayName: magickPhoton
+        CFBundleIdentifier: com.example.magickPhoton
+        CFBundleVersion: 1.0.0
+        CFBundlePackageType: APPL
+        NSPrincipalClass: NSApplication
+        NSMainNibFile: MainMenu
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Media File
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Owner
+            LSItemContentTypes:
+              - public.image
+              - public.movie
+        NSServices:
+          - NSMenuItem:
+              default: Process with magickPhoton
+            NSMessage: processFile
+            NSPortName: magickPhoton
+            NSSendFileTypes:
+              - public.data
+
