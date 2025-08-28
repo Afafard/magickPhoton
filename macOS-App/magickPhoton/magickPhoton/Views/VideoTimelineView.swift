@@ -2,64 +2,71 @@ import SwiftUI
 import AVKit
 
 struct VideoTimelineView: View {
-    var videoURL: URL
+    @State private var videoURL: URL
     @Binding var startTime: Double
     @Binding var endTime: Double
-    @State private var duration: Double = 0
-    
+
+    @State private var player: AVPlayer?
+    @State private var currentTime: CMTime = .zero
+    @State private var duration: CMTime = .zero
+    @State private var isPlaying = false
+
+    init(videoURL: URL, startTime: Binding<Double>, endTime: Binding<Double>) {
+        self._videoURL = State(initialValue: videoURL)
+        self._startTime = startTime
+        self._endTime = endTime
+
+        // Fixed: Using AVURLAsset(url:) instead of deprecated init(url:)
+        let asset = AVURLAsset(url: videoURL)
+        self.duration = asset.duration
+    }
+
     var body: some View {
-        VStack {
-            Text("Video Timeline")
-                .font(.headline)
-            
+        VStack(spacing: 0) {
+            // Timeline controls and visualization
             HStack {
-                Text(timeString(time: startTime))
-                Slider(value: $startTime, in: 0...endTime, step: 0.1) {
-                    Text("Start Time")
+                Text("Start: \(timeString(time: startTime))")
+                    .font(.caption)
+
+                Slider(value: $startTime, in: 0...endTime, step: 0.1)
+                    .frame(height: 20)
+
+                Text("End: \(timeString(time: endTime))")
+                    .font(.caption)
+            }
+            .padding(.horizontal)
+
+            // Timeline preview
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.2))
+
+                    // Start marker
+                    Rectangle()
+                        .fill(Color.green)
+                        .frame(width: 2)
+                        .offset(x: geometry.size.width * CGFloat(startTime / duration.seconds))
+
+                    // End marker
+                    Rectangle()
+                        .fill(Color.red)
+                        .frame(width: 2)
+                        .offset(x: geometry.size.width * CGFloat(endTime / duration.seconds))
                 }
             }
-            
-            HStack {
-                Text(timeString(time: endTime))
-                Slider(value: $endTime, in: startTime...max(duration, startTime), step: 0.1) {
-                    Text("End Time")
-                }
-            }
-            
-            Text("Duration: \(timeString(time: duration))")
-                .font(.caption)
-        }
-        .onAppear {
-            loadDuration()
-        }
-        .onChange(of: videoURL) { _ in
-            loadDuration()
+            .frame(height: 30)
         }
     }
-    
+
     private func timeString(time: Double) -> String {
         let seconds = Int(time) % 60
         let minutes = Int(time / 60) % 60
         let hours = Int(time / 3600)
         return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
     }
-    
-    private func loadDuration() {
-        guard !videoURL.path.isEmpty else { return }
-        
-        let asset = AVAsset(url: videoURL)
-        Task {
-            do {
-                let duration = try await asset.load(.duration)
-                self.duration = duration.seconds
-                if endTime > duration.seconds {
-                    DispatchQueue.main.async {
-                        endTime = duration.seconds
-                    }
-                }
-            } catch {
-                print("Error loading video duration: \(error)")
-            }
-        }
-    }
+}
+
+#Preview {
+    VideoTimelineView(videoURL: URL(fileURLWithPath: ""), startTime: .constant(0), endTime: .constant(10))
 }

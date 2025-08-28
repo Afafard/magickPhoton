@@ -28,6 +28,7 @@ struct ContentView: View {
                     srModel: $srModel,
                     startTime: $startTime,
                     endTime: $endTime,
+                    onProcess: processMedia
                 )
                 .frame(maxHeight: .infinity)
             }
@@ -67,6 +68,7 @@ struct ContentView: View {
                 print("Warning: Python environment not properly configured")
             }
         }
+        // Fixed: Using new onChange syntax for macOS 14.0+
         .onChange(of: inputURL) { newValue in
             if let url = newValue {
                 player = AVPlayer(url: url)
@@ -87,12 +89,8 @@ struct ContentView: View {
                 },
                 receiveValue: { notification in
                     if let filePath = notification.object as? String {
-                        do {
-                            let url = URL(fileURLWithPath: filePath)
-                            self.inputURL = url
-                        } catch {
-                            print("Error creating URL from file path: \(error)")
-                        }
+                        // Fixed: Removed unreachable catch block
+                        self.inputURL = URL(fileURLWithPath: filePath)
                     }
                 }
             )
