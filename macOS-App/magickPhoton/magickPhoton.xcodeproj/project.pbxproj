@@ -30,11 +30,25 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		FA01767F2E60E13000DC181A /* Exceptions for "magickPhoton" folder in "magickPhotonTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				PythonBridge.swift,
+			);
+			target = FA6599D02E5E57A700E2648C /* magickPhotonTests */;
+		};
 		FA659A012E5E57E400E2648C /* Exceptions for "magickPhoton" folder in "magickPhoton" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Assets.xcassets,
 				magickPhotonApp.swift,
+				PythonBridge.swift,
+				Views/ContentView.swift,
+				Views/ControlPanelView.swift,
+				Views/CropOverlay.swift,
+				Views/FileBrowserView.swift,
+				Views/PreviewPanel.swift,
+				Views/VideoTimelineView.swift,
 			);
 			target = FA6599C22E5E57A600E2648C /* magickPhoton */;
 		};
@@ -55,6 +69,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				FA659A012E5E57E400E2648C /* Exceptions for "magickPhoton" folder in "magickPhoton" target */,
+				FA01767F2E60E13000DC181A /* Exceptions for "magickPhoton" folder in "magickPhotonTests" target */,
 			);
 			path = magickPhoton;
 			sourceTree = "<group>";

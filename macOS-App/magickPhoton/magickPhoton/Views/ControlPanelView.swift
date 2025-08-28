@@ -70,6 +70,8 @@ struct ControlPanelView: View {
                         }
 
                         Button("Process") {
+                            // This will be implemented in the parent view
+                            // For now, we'll just simulate it
                             processMedia()
                         }
                         .buttonStyle(.borderedProminent)
@@ -98,21 +100,21 @@ struct ControlPanelView: View {
     }
 
     private func processMedia() {
-        // This will be called when the Process button is clicked
+        // In a real implementation, this would call the parent view's processing function
+        print("Processing media with settings:")
+        print("Crop Active: \(isCropActive)")
+        print("SR Model: \(srModel)")
+        print("Start Time: \(timeString(time: startTime))")
+        print("End Time: \(timeString(time: endTime))")
+
+        // Simulate processing for demonstration
         isProcessing = true
-        processingMessage = "Processing media..."
+        processingMessage = "Processing in progress..."
 
-        // In a real implementation, you would:
-        // 1. Get the input file URL from ContentView
-        // 2. Collect all the settings from the UI
-        // 3. Call PythonBridge to execute the processing
-
-        // For now, just simulate the process
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             isProcessing = false
             processingMessage = "Processing complete!"
 
-            // Reset message after a while
             DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
                 self.processingMessage = ""
             }

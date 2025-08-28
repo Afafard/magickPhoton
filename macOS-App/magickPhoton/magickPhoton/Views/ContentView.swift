@@ -27,7 +27,7 @@ struct ContentView: View {
                     isCropActive: $isCropActive,
                     srModel: $srModel,
                     startTime: $startTime,
-                    endTime: $endTime
+                    endTime: $endTime,
                 )
                 .frame(maxHeight: .infinity)
             }
@@ -62,6 +62,10 @@ struct ContentView: View {
         }
         .onAppear {
             setupServiceObserver()
+            // Test Python environment
+            if !PythonBridge.shared.testPythonEnvironment() {
+                print("Warning: Python environment not properly configured")
+            }
         }
         .onChange(of: inputURL) { newValue in
             if let url = newValue {
@@ -98,6 +102,7 @@ struct ContentView: View {
         guard let inputURL = inputURL else { return }
 
         isProcessing = true
+        processingResult = "Processing media..."
 
         // Create output path
         let outputPath = FileManager.default.temporaryDirectory.appendingPathComponent("output.mp4")
@@ -114,6 +119,11 @@ struct ContentView: View {
             operations["sr_model"] = srModel
         }
 
+        // Add time cropping
+        let start = timeString(time: startTime)
+        let end = timeString(time: endTime)
+        operations["time_crop"] = "\(start)-\(end)"
+
         // Use Python bridge to process media
         let result = PythonBridge.shared.processMedia(
             inputPath: inputURL.path,
@@ -123,13 +133,26 @@ struct ContentView: View {
 
         DispatchQueue.main.async {
             isProcessing = false
-            processingResult = result ? "Processing completed successfully" : "Processing failed"
-
             if result {
+                processingResult = "Processing completed successfully!"
                 // Update the preview with output file
                 self.player = AVPlayer(url: outputPath)
+            } else {
+                processingResult = "Processing failed. Check console for errors."
+            }
+
+            // Reset result message after a while
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                self.processingResult = nil
             }
         }
+    }
+
+    private func timeString(time: Double) -> String {
+        let seconds = Int(time) % 60
+        let minutes = Int(time / 60) % 60
+        let hours = Int(time / 3600)
+        return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
     }
 }
 
